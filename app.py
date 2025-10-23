@@ -1,4 +1,5 @@
 from flask import Flask
+from app.models import Driver
 app = Flask(__name__)
 
 

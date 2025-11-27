@@ -7,7 +7,6 @@ register_bp = Blueprint("register", __name__, url_prefix="/api")
 
 @register_bp.route("/register", methods=["POST"])
 def register():
-    """Unified registration endpoint for both drivers and passengers"""
     try:
         # Use silent=True so invalid/missing JSON doesn't raise a BadRequest
         # and we can return a controlled 400 response expected by tests.
@@ -16,19 +15,23 @@ def register():
         if not data:
             return jsonify({'error': 'No data provided'}), 400
 
-        username = data.get('username')
+        email = data.get('email')
         password = data.get('password')
         role = data.get('role')  # 'driver' or 'passenger'
+        phonenumber = data.get('phonenumber')
+        age = data.get('age')
+        
+
         
         # Validation
-        if not username or not password or not role:
+        if not email or not password or not role:
             return jsonify({'error': 'Missing required fields'}), 400
         
         # Trim whitespace from username (consistent with frontend validation)
-        username = username.strip()
+        email = email.strip()
         
         # Check username length after trimming
-        if len(username) < 3:
+        if len(email) < 3:
             return jsonify({'error': 'Username must be at least 3 characters'}), 400
         
         if len(password) < 8:
@@ -37,18 +40,17 @@ def register():
         if role not in ['driver', 'passenger']:
             return jsonify({'error': 'Invalid role. Must be "driver" or "passenger"'}), 400
         
-        # Create user data
-        form_data = {
-            'username': username,
-            'password': generate_password_hash(password),
-            'type': role
-        }
+        if role == 'driver':
+            pass
         
-        # Choose the primary filename used for duplicate checks. During tests we
-        # prefer test-specific files so existing committed data doesn't cause
-        # spurious duplicate conflicts. For compatibility we still append to
-        # the main files so tests that read 'drivers.json'/'passengers.json'
-        # will see the new entries.
+        # Create user data
+        # form_data = {
+        #     'username': username,
+        #     'password': generate_password_hash(password),
+        #     'type': role
+        # }
+        
+        #TESTING
         testing = bool(current_app.config.get('TESTING'))
         primary_filename = (
             'test_drivers.json' if role == 'driver' else 'test_passengers.json'

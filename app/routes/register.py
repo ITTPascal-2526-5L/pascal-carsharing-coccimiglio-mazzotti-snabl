@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import generate_password_hash
+from werkzeug.utils import secure_filename
 import json
 import os
 
@@ -8,9 +9,12 @@ register_bp = Blueprint("register", __name__, url_prefix="/api")
 @register_bp.route("/register", methods=["POST"])
 def register():
     try:
-        # Use silent=True so invalid/missing JSON doesn't raise a BadRequest
-        # and we can return a controlled 400 response expected by tests.
-        data = request.get_json(silent=True)
+        # Determine if we are dealing with JSON or Multipart
+        if request.is_json:
+            data = request.get_json(silent=True)
+        else:
+            # Handle multipart/form-data
+            data = request.form
 
         if not data:
             return jsonify({'error': 'No data provided'}), 400
@@ -20,18 +24,23 @@ def register():
         role = data.get('role')  # 'driver' or 'passenger'
         phonenumber = data.get('phonenumber')
         age = data.get('age')
-        
+        username = data.get('username')
+        licenseid = data.get('licenseid')
+        attending_school = data.get('attending_school')
 
-        
         # Validation
-        if not email or not password or not role:
+        if not email or not password or not role or not phonenumber or not age or not username:
             return jsonify({'error': 'Missing required fields'}), 400
         
         # Trim whitespace from username (consistent with frontend validation)
         email = email.strip()
+        username = username.strip()
         
         # Check username length after trimming
         if len(email) < 3:
+            return jsonify({'error': 'Email must be at least 3 characters'}), 400
+        
+        if len(username) < 3:
             return jsonify({'error': 'Username must be at least 3 characters'}), 400
         
         if len(password) < 8:
@@ -41,14 +50,46 @@ def register():
             return jsonify({'error': 'Invalid role. Must be "driver" or "passenger"'}), 400
         
         if role == 'driver':
-            pass
+            if not licenseid:
+                return jsonify({'error': 'License ID is required for drivers'}), 400
+        elif role == 'passenger':
+            if not attending_school:
+                return jsonify({'error': 'Attending school is required for passengers'}), 400
         
+        # Handle file upload for drivers
+        license_file_path = None
+        if role == 'driver':
+            if 'license_file' in request.files:
+                file = request.files['license_file']
+                if file.filename != '':
+                    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
+                    if '.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS:
+                        filename = secure_filename(file.filename)
+                        # Ensure upload directory exists
+                        os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
+                        save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                        file.save(save_path)
+                        # Store relative path or filename
+                        license_file_path = filename
+                    else:
+                        return jsonify({'error': 'Invalid file format. Only PNG, JPG, JPEG, PDF are allowed.'}), 400
+
         # Create user data
-        # form_data = {
-        #     'username': username,
-        #     'password': generate_password_hash(password),
-        #     'type': role
-        # }
+        form_data = {
+            'username': username,
+            'password': generate_password_hash(password),
+            'type': role,
+            'phonenumber': phonenumber,
+            'age': age,
+            'email': email
+        }
+
+        if role == 'driver':
+            form_data['licenseid'] = licenseid
+            if license_file_path:
+                form_data['license_file'] = license_file_path
+        elif role == 'passenger':
+            form_data['attending_school'] = attending_school
         
         #TESTING
         testing = bool(current_app.config.get('TESTING'))

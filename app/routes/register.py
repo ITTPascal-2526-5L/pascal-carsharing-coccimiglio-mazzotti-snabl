@@ -147,3 +147,55 @@ def register():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@register_bp.route("/register-school", methods=["POST"])
+def register_school():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        school_name = data.get('school_name')
+        address = data.get('address')
+        email = data.get('email')
+        representative = data.get('representative')
+        codice_meccanografico = data.get('codice_meccanografico')
+
+        if not school_name or not address or not email or not representative or not codice_meccanografico:
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        school_data = {
+            'school_name': school_name,
+            'address': address,
+            'email': email,
+            'representative': representative,
+            'codice_meccanografico': codice_meccanografico,
+            'status': 'pending' # Default status for application
+        }
+
+        # Save to schools.json
+        testing = bool(current_app.config.get('TESTING'))
+        filename = 'test_schools.json' if testing else 'schools.json'
+        
+        # Check if school already exists (by email or name)
+        if os.path.exists(filename):
+            with open(filename, 'r') as f:
+                for line in f:
+                    if line.strip():
+                        try:
+                            existing = json.loads(line)
+                            if (existing.get('email') == email or 
+                                existing.get('school_name') == school_name or
+                                existing.get('codice_meccanografico') == codice_meccanografico):
+                                return jsonify({'error': 'School already registered'}), 409
+                        except json.JSONDecodeError:
+                            continue
+
+        with open(filename, 'a') as f:
+            json.dump(school_data, f)
+            f.write('\n')
+            
+        return jsonify({'message': 'School application submitted successfully'}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

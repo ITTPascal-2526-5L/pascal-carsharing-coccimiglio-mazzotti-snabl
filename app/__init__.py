@@ -41,6 +41,9 @@ def create_app():
         )
         return response
 
+    from flask_jwt_extended import JWTManager
+    jwt = JWTManager(app)
+
     from .routes import blueprints
     for bp in blueprints:
         app.register_blueprint(bp)

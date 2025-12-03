@@ -77,3 +77,25 @@ def login():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@login_bp.route("/logout", methods=["POST"])
+def logout():
+    try:
+        return jsonify({'message': 'Logout successful'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@login_bp.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    try:
+        current_user_identity = get_jwt_identity()
+        current_user_claims = get_jwt()
+        return jsonify({
+            'message': 'Access granted',
+            'user_identity': current_user_identity,
+            'user_claims': current_user_claims
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+

@@ -2,7 +2,7 @@ import requests
 import os
 
 # Configuration
-BASE_URL = "http://localhost:5000/api/register"
+BASE_URL = "http://localhost:5001/api/register"
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'app', 'uploads')
 
 def create_dummy_pdf(filename):

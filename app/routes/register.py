@@ -24,18 +24,19 @@ def register():
         role = data.get('role')  # 'driver' or 'passenger'
         phonenumber = data.get('phonenumber')
         age = data.get('age')
-        username = data.get('username')
+        name = data.get('name')
+        surname = data.get('surname')
         licenseid = data.get('licenseid')
         attending_school = data.get('attending_school')
 
         # Validation
-        if not email or not password or not role or not phonenumber or not age or not username:
+        if not email or not password or not role or not phonenumber or not age or not name or not surname:
             return jsonify({'error': 'Missing required fields'}), 400
         
         # Trim whitespace from username (consistent with frontend validation)
         email = email.strip()
-        username = username.strip()
-        
+        name = name.strip()
+        surname = surname.strip()
         # Check username length after trimming
         if len(email) < 3:
             return jsonify({'error': 'Email must be at least 3 characters'}), 400

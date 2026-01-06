@@ -1,8 +1,7 @@
-"""
-Modelli del sistema di car sharing.
-"""
-
-from .user import User, Driver, Passenger
-
-__all__ = ['User', 'Driver', 'Passenger']
-
+from .. import db
+from .driver import Driver
+from .passenger import Passenger
+from .school import School
+from .trip import Trip
+from .trip_request import TripRequest
+from .vehicle import Vehicle

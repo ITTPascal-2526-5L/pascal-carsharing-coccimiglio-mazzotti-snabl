@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
+from datetime import datetime
 import json
 import os
 
@@ -33,16 +34,19 @@ def register():
         if not email or not password or not role or not phonenumber or not age or not name or not surname:
             return jsonify({'error': 'Missing required fields'}), 400
         
-        # Trim whitespace from username (consistent with frontend validation)
+        # Trim whitespace from name and surname (consistent with frontend validation)
         email = email.strip()
         name = name.strip()
         surname = surname.strip()
-        # Check username length after trimming
-        if len(email) < 3:
+        # Check email length after trimming
+        if len(email) < 5:
             return jsonify({'error': 'Email must be at least 3 characters'}), 400
         
-        if len(username) < 3:
-            return jsonify({'error': 'Username must be at least 3 characters'}), 400
+        if len(name) < 3:
+            return jsonify({'error': 'Name must be at least 3 characters'}), 400
+        
+        if len(surname) < 3:
+            return jsonify({'error': 'Surname must be at least 3 characters'}), 400
         
         if len(password) < 8:
             return jsonify({'error': 'Password must be at least 8 characters'}), 400
@@ -75,14 +79,15 @@ def register():
                     else:
                         return jsonify({'error': 'Invalid file format. Only PNG, JPG, JPEG, PDF are allowed.'}), 400
 
-        # Create user data
+        # Create user data (da eliminare type?)
         form_data = {
-            'username': username,
+            'name': name,
+            'surname': surname,
+            'email': email,
             'password': generate_password_hash(password),
-            'type': role,
-            'phonenumber': phonenumber,
             'age': age,
-            'email': email
+            'phonenumber': phonenumber,
+            'created_at': datetime.utcnow().isoformat()
         }
 
         if role == 'driver':
@@ -120,9 +125,9 @@ def register():
                             except json.JSONDecodeError:
                                 continue
         
-        # Check if username already exists
-        if any(user.get('username') == username for user in users):
-            return jsonify({'error': 'Username already exists'}), 409
+        # Check if user already exists
+        if any(user.get('email') == email for user in users):
+            return jsonify({'error': 'User already exists'}), 409
 
         # Append new user to primary and secondary files as applicable
         try:
@@ -143,7 +148,7 @@ def register():
         
         return jsonify({
             'message': f'Successfully registered as {role}',
-            'username': username
+            'username': name
         }), 201
         
     except Exception as e:
@@ -160,9 +165,9 @@ def register_school():
         address = data.get('address')
         email = data.get('email')
         representative = data.get('representative')
-        codice_meccanografico = data.get('codice_meccanografico')
+        mechanical_code = data.get('mechanical_code')
 
-        if not school_name or not address or not email or not representative or not codice_meccanografico:
+        if not school_name or not address or not email or not representative or not mechanical_code:
             return jsonify({'error': 'Missing required fields'}), 400
 
         school_data = {
@@ -170,7 +175,7 @@ def register_school():
             'address': address,
             'email': email,
             'representative': representative,
-            'codice_meccanografico': codice_meccanografico,
+            'mechanical_code': mechanical_code,
             'status': 'pending' # Default status for application
         }
 

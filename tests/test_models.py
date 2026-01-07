@@ -3,7 +3,7 @@ Test per i modelli User, Driver e Passenger.
 """
 
 import pytest
-from app.models.user import User, Driver, Passenger
+from .user_models import User, Driver, Passenger
 from werkzeug.security import check_password_hash
 
 

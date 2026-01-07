@@ -223,3 +223,8 @@ __marimo__/
 docs/DIAGRAMMA_CLASSI.md
 docs/DIAGRAMMA_CLASSI.puml
 nuxt-app/package-lock.json
+
+# Db stuff
+*.db
+*.sqlite3
+instance/

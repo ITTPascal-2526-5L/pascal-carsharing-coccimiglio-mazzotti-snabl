@@ -16,6 +16,7 @@
         <nav class="nav" aria-label="Primary">
           <NuxtLink class="btn" to="/">Home</NuxtLink>
           <NuxtLink class="btn" to="/register">Registrati</NuxtLink>
+          <NuxtLink class="btn" to="/register-school">Scuole</NuxtLink>
           <NuxtLink class="btn primary" to="/login">Accedi</NuxtLink>
         </nav>
       </div>

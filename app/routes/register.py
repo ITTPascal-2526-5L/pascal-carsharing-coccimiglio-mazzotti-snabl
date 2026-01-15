@@ -20,33 +20,27 @@ def register():
         if not data:
             return jsonify({'error': 'No data provided'}), 400
 
+        username = data.get('username')
         email = data.get('email')
         password = data.get('password')
         role = data.get('role')  # 'driver' or 'passenger'
         phonenumber = data.get('phonenumber')
         age = data.get('age')
-        name = data.get('name')
-        surname = data.get('surname')
         licenseid = data.get('licenseid')
         attending_school = data.get('attending_school')
 
         # Validation
-        if not email or not password or not role or not phonenumber or not age or not name or not surname:
+        if not email or not password or not role or not phonenumber or not age or not username:
             return jsonify({'error': 'Missing required fields'}), 400
         
-        # Trim whitespace from name and surname (consistent with frontend validation)
         email = email.strip()
-        name = name.strip()
-        surname = surname.strip()
+
         # Check email length after trimming
         if len(email) < 5:
             return jsonify({'error': 'Email must be at least 3 characters'}), 400
         
-        if len(name) < 3:
-            return jsonify({'error': 'Name must be at least 3 characters'}), 400
-        
-        if len(surname) < 3:
-            return jsonify({'error': 'Surname must be at least 3 characters'}), 400
+        if len(username) < 3:
+            return jsonify({'error': 'Username must be at least 3 characters'}), 400
         
         if len(password) < 8:
             return jsonify({'error': 'Password must be at least 8 characters'}), 400
@@ -81,8 +75,7 @@ def register():
 
         # Create user data (da eliminare type?)
         form_data = {
-            'name': name,
-            'surname': surname,
+            'username': username,
             'email': email,
             'password': generate_password_hash(password),
             'age': age,
@@ -148,7 +141,7 @@ def register():
         
         return jsonify({
             'message': f'Successfully registered as {role}',
-            'username': name
+            'username': username
         }), 201
         
     except Exception as e:

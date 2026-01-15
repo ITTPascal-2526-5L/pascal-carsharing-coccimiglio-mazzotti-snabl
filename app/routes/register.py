@@ -22,6 +22,7 @@ def register():
 
         username = data.get('username')
         email = data.get('email')
+        username = data.get('username')
         password = data.get('password')
         role = data.get('role')  # 'driver' or 'passenger'
         phonenumber = data.get('phonenumber')
@@ -38,6 +39,8 @@ def register():
         # Check email length after trimming
         if len(email) < 5:
             return jsonify({'error': 'Email must be at least 3 characters'}), 400
+        if len(username) < 3:
+            return jsonify({'error': 'Username must be at least 3 characters'}), 400
         
         if len(username) < 3:
             return jsonify({'error': 'Username must be at least 3 characters'}), 400
@@ -100,7 +103,7 @@ def register():
         
         # Read existing data
         users = []
-        # Check across both primary and the other role file so usernames are
+        # Check across both primary and the other role file so usernames and emails are
         # unique globally (drivers and passengers share the same namespace).
         other_role = 'passenger' if role == 'driver' else 'driver'
         other_primary = (
@@ -118,8 +121,11 @@ def register():
                             except json.JSONDecodeError:
                                 continue
         
-        # Check if user already exists
-        if any(user.get('email') == email for user in users):
+        # Check if user already exists (by email or username)
+        if any(
+            user.get('email') == email or user.get('username') == username
+            for user in users
+        ):
             return jsonify({'error': 'User already exists'}), 409
 
         # Append new user to primary and secondary files as applicable
@@ -196,5 +202,44 @@ def register_school():
             
         return jsonify({'message': 'School application submitted successfully'}), 201
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@register_bp.route("/users", methods=["GET"])
+def list_users():
+    """
+    Return all registered users (drivers and passengers) as a JSON list.
+    Each user object is augmented with a 'role' field.
+    """
+    try:
+        testing = bool(current_app.config.get('TESTING'))
+
+        # Determine filenames for drivers and passengers
+        drivers_file = 'test_drivers.json' if testing else 'drivers.json'
+        passengers_file = 'test_passengers.json' if testing else 'passengers.json'
+
+        all_users = []
+
+        for filename, role in (
+            (drivers_file, 'driver'),
+            (passengers_file, 'passenger'),
+        ):
+            if os.path.exists(filename):
+                with open(filename, 'r') as f:
+                    for line in f:
+                        if not line.strip():
+                            continue
+                        try:
+                            user = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        user_copy = user.copy()
+                        user_copy['role'] = role
+                        # Never expose password hashes
+                        user_copy.pop('password', None)
+                        all_users.append(user_copy)
+
+        return jsonify({'users': all_users}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
